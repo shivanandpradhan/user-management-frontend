@@ -58,8 +58,16 @@ export const verifyMfa = (
   return axiosInstance.post("/auth/mfa/verify", data);
 };
 
-export const disableMfa = (): Promise<ApiResponse<void>> => {
-  return axiosInstance.post("/auth/mfa/disable");
+export const disableMfa = (userId: string): Promise<ApiResponse<void>> => {
+  return axiosInstance.post(
+    "/auth/mfa/disable",
+    {},
+    {
+      headers: {
+        "x-user-id": userId,
+      },
+    }
+  );
 };
 
 export const refreshToken = (

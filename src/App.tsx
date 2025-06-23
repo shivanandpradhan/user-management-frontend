@@ -20,19 +20,19 @@ import UserDetails from "./components/dashboard/superAdmin/UserDetails";
 import SystemMetrics from "./components/dashboard/superAdmin/SystemMetrics";
 import NotFound from "./pages/NotFound";
 
-// const queryClient = new QueryClient();
+const queryClient = new QueryClient();
 
 // todo - disabling retry mechanism for development purpose. will remove later.
-const queryClient = new QueryClient({
-  defaultOptions: {
-    queries: {
-      retry: false, // Disable retry globally
-    },
-    mutations: {
-      retry: false, // (Optional) Disable retry for mutations as well
-    },
-  },
-});
+// const queryClient = new QueryClient({
+//   defaultOptions: {
+//     queries: {
+//       retry: false, // Disable retry globally
+//     },
+//     mutations: {
+//       retry: false, // (Optional) Disable retry for mutations as well
+//     },
+//   },
+// });
 
 function App() {
   return (
