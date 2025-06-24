@@ -14,6 +14,8 @@ export interface UserProfileDto {
   roles?: [String];
   enabled?: Boolean;
   username?: string;
+  createdAt?: string;
+  lastLogin?: string;
 }
 
 export interface PaginatedResponse<T> {
