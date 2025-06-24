@@ -1,17 +1,35 @@
 import { useApiMutation } from "../../../hooks/useApi";
 import { lockUser, unlockUser } from "../../../api/admin";
 import { useState } from "react";
+import { useSelector } from "react-redux";
+import type { RootState } from "../../../store/store";
 
-const AdminTools = ({ userId }: { userId: string }) => {
+interface AdminToolsProps {
+  userId: string;
+  onComplete?: () => void;
+}
+const AdminTools = ({ userId, onComplete }: AdminToolsProps) => {
   const [action, setAction] = useState<"lock" | "unlock">("lock");
+
+  const actingUserId = useSelector((state: RootState) => state.auth.user?.id);
+
+  // Correct: Accept an object with both IDs
   const { mutate, isPending } = useApiMutation(
-    action === "lock" ? lockUser : unlockUser,
-    {},
+    ({ userId, actingUserId }: { userId: string; actingUserId: string }) =>
+      action === "lock"
+        ? lockUser(userId, actingUserId)
+        : unlockUser(userId, actingUserId),
+    {
+      onSuccess: () => {
+        onComplete?.();
+      },
+    },
     [["admin", "users"]]
   );
 
   const handleAction = () => {
-    mutate(userId);
+    if (!actingUserId) return;
+    mutate({ userId, actingUserId });
   };
 
   return (

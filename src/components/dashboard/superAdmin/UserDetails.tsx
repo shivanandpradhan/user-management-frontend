@@ -4,15 +4,20 @@ import { getUserDetails } from "../../../api/admin";
 import { useApiQuery } from "../../../hooks/useApi";
 import AdminTools from "../admin/AdminTools";
 import type { RootState } from "../../../store/store";
+import { useCallback } from "react";
 
 const UserDetails = () => {
   const { userId } = useParams();
   const actingUserId = useSelector((state: RootState) => state.auth.user?.id);
-  const { data, isLoading } = useApiQuery(
+  const { data, isLoading, refetch } = useApiQuery(
     ["user", userId as string],
     () => getUserDetails(userId!, actingUserId!),
     { enabled: !!userId && !!actingUserId }
   );
+
+  const handleRefetch = useCallback(() => {
+    refetch();
+  }, [refetch]);
 
   if (isLoading)
     return (
@@ -102,7 +107,7 @@ const UserDetails = () => {
 
           <div className="space-y-1">
             <h3 className="text-xs font-medium text-gray-500 uppercase tracking-wider">
-              Account Status
+              Account Enabled
             </h3>
             <div className="flex items-center">
               <span
@@ -113,6 +118,23 @@ const UserDetails = () => {
                 }`}
               >
                 {user?.enabled ? "Active" : "Inactive"}
+              </span>
+            </div>
+          </div>
+
+          <div className="space-y-1">
+            <h3 className="text-xs font-medium text-gray-500 uppercase tracking-wider">
+              Account Lock
+            </h3>
+            <div className="flex items-center">
+              <span
+                className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-medium ${
+                  user?.accountLocked
+                    ? "bg-red-100 text-red-800"
+                    : "bg-green-100 text-green-800"
+                }`}
+              >
+                {user?.accountLocked ? "Locked" : "UnLocked"}
               </span>
             </div>
           </div>
@@ -146,7 +168,7 @@ const UserDetails = () => {
         <h2 className="text-xl font-semibold text-gray-800 mb-6">
           Administration
         </h2>
-        <AdminTools userId={userId || ""} />
+        <AdminTools userId={userId || ""} onComplete={handleRefetch} />
       </div>
 
       {/* Decorative elements */}

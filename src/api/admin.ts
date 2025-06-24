@@ -20,18 +20,46 @@ export const getUserDetails = (
   });
 };
 
-export const lockUser = (userId: string): Promise<ApiResponse<void>> => {
-  return axiosInstance.put(`/admin/users/${userId}/lock`);
+export const lockUser = (
+  userId: string,
+  actingUserId: string
+): Promise<ApiResponse<void>> => {
+  return axiosInstance.put(`/admin/users/${userId}/lock`, undefined, {
+    headers: {
+      "x-user-id": actingUserId,
+    },
+  });
 };
 
-export const unlockUser = (userId: string): Promise<ApiResponse<void>> => {
-  return axiosInstance.put(`/admin/users/${userId}/unlock`);
+export const unlockUser = (
+  userId: string,
+  actingUserId: string
+): Promise<ApiResponse<void>> => {
+  return axiosInstance.put(`/admin/users/${userId}/unlock`, undefined, {
+    headers: {
+      "x-user-id": actingUserId,
+    },
+  });
 };
 
-export const enableUser = (userId: string): Promise<ApiResponse<void>> => {
-  return axiosInstance.put(`/admin/users/${userId}/enable`);
+export const enableUser = (
+  userId: string,
+  actingUserId: string
+): Promise<ApiResponse<void>> => {
+  return axiosInstance.put(`/admin/users/${userId}/enable`, undefined, {
+    headers: {
+      "x-user-id": actingUserId,
+    },
+  });
 };
 
-export const disableUser = (userId: string): Promise<ApiResponse<void>> => {
-  return axiosInstance.put(`/admin/users/${userId}/disable`);
+export const disableUser = (
+  userId: string,
+  actingUserId: string
+): Promise<ApiResponse<void>> => {
+  return axiosInstance.put(`/admin/users/${userId}/disable`, undefined, {
+    headers: {
+      "x-user-id": actingUserId,
+    },
+  });
 };

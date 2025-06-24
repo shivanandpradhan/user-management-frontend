@@ -16,6 +16,7 @@ export interface UserProfileDto {
   username?: string;
   createdAt?: string;
   lastLogin?: string;
+  accountLocked?: string;
 }
 
 export interface PaginatedResponse<T> {
