@@ -3,6 +3,7 @@ import { useDispatch, useSelector } from "react-redux";
 import type { AppDispatch, RootState } from "../store/store";
 import { signup, login, logout } from "../store/slices/authSlice";
 import { useNavigate } from "react-router-dom";
+import axiosInstance from "../api/axios";
 
 export const useAuth = () => {
   const dispatch = useDispatch<AppDispatch>();
@@ -14,12 +15,47 @@ export const useAuth = () => {
   const handleLogin = async (credentials: {
     usernameOrEmail: string;
     password: string;
-    mfaCode?: string;
   }) => {
     try {
-      dispatch(login(credentials));
+      const resultAction = await dispatch(login(credentials));
+      if (login.fulfilled.match(resultAction)) {
+        return resultAction.payload; // Contains mfaEnabled, userId, etc.
+      } else {
+        throw new Error(resultAction.payload as string);
+      }
     } catch (err) {
-      console.error("Login error:", err);
+      throw err;
+    }
+  };
+
+  const handleVerifyMfa = async ({
+    code,
+    userId,
+  }: {
+    code: string;
+    userId: string;
+  }) => {
+    try {
+      const response = await axiosInstance.post(
+        "/auth/mfa/verify",
+        { code },
+        { headers: { "x-user-id": userId } }
+      );
+      // Save token and user to localStorage, update redux state
+      dispatch({
+        type: "auth/loginSuccess",
+        payload: {
+          accessToken: response.data.accessToken,
+          userId: response.data.userId,
+          username: response.data.username,
+          email: response.data.email,
+          roles: response.data.roles,
+          mfaEnabled: response.data.mfaEnabled,
+        },
+      });
+      return response.data;
+    } catch (error: any) {
+      throw error.response?.data?.message || error.message || "MFA failed";
     }
   };
 
@@ -40,6 +76,37 @@ export const useAuth = () => {
     navigate("/login");
   };
 
+  // In useAuth.js or useAuth.ts
+  const handleVerifyOtp = async ({
+    otp,
+    userId,
+  }: {
+    otp: string;
+    userId: string;
+  }) => {
+    try {
+      const response = await axiosInstance.post(
+        "/auth/verify-otp",
+        { otp },
+        { headers: { "x-user-id": userId } }
+      );
+      dispatch({
+        type: "auth/loginSuccess",
+        payload: {
+          accessToken: response.data.accessToken,
+          userId: response.data.userId,
+          username: response.data.username,
+          email: response.data.email,
+          roles: response.data.roles,
+          mfaEnabled: response.data.mfaEnabled,
+        },
+      });
+      return response.data;
+    } catch (error: any) {
+      throw error.response?.data?.message || error.message || "OTP failed";
+    }
+  };
+
   // useEffect(() => {
   //   if (isAuthenticated) {
   //     navigate("/dashboard");
@@ -54,61 +121,7 @@ export const useAuth = () => {
     login: handleLogin,
     signup: handleSignup,
     logout: handleLogout,
+    verifyMfa: handleVerifyMfa,
+    verifyOtp: handleVerifyOtp,
   };
 };
-
-// import { useDispatch, useSelector } from 'react-redux';
-// import { AppDispatch, RootState } from '../store/store';
-// import { login as loginAction, logout as logoutAction } from '../store/slices/authSlice';
-// import { useNavigate } from 'react-router-dom';
-// import { useApiMutation } from './useApi';
-// import { login, verifyOtp } from '../api/auth';
-
-// export const useAuth = () => {
-//   const dispatch = useDispatch<AppDispatch>();
-//   const navigate = useNavigate();
-//   const { isAuthenticated, user, loading, error } = useSelector((state: RootState) => state.auth);
-
-//   const loginMutation = useApiMutation(login, {
-//     onSuccess: (data) => {
-//       if (data.data.mfaEnabled) {
-//         // MFA is enabled, don't dispatch login yet
-//         return;
-//       }
-//       dispatch(loginAction(data.data));
-//       navigate('/dashboard');
-//     }
-//   });
-
-//   const verifyOtpMutation = useApiMutation(verifyOtp, {
-//     onSuccess: (data) => {
-//       dispatch(loginAction(data.data));
-//       navigate('/dashboard');
-//     }
-//   });
-
-//   const login = async (credentials: { usernameOrEmail: string; password: string; mfaCode?: string }) => {
-//     if (credentials.mfaCode) {
-//       await verifyOtpMutation.mutateAsync({
-//         usernameOrEmail: credentials.usernameOrEmail,
-//         otp: credentials.mfaCode
-//       });
-//     } else {
-//       await loginMutation.mutateAsync(credentials);
-//     }
-//   };
-
-//   const logout = () => {
-//     dispatch(logoutAction());
-//     navigate('/login');
-//   };
-
-//   return {
-//     isAuthenticated,
-//     user,
-//     loading: loading || loginMutation.isLoading || verifyOtpMutation.isLoading,
-//     error: error || loginMutation.error || verifyOtpMutation.error,
-//     login,
-//     logout
-//   };
-// };

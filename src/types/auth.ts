@@ -41,6 +41,7 @@ export interface AuthResponse {
   username: string;
   email: string;
   roles?: string[];
+  otpLoginEnabled?: boolean;
 }
 
 export interface ApiResponse<T> {

@@ -3,7 +3,8 @@ import { getUserSecurity } from "../../../api/users";
 import MfaSetup from "../mfa/MfaSetup";
 import { formatDate } from "../../../utils/helpers";
 import Error from "../../common/Error";
-import { useCallback } from "react";
+import { useCallback, useState } from "react";
+import ChangePasswordModal from "../../models/ChangePasswordModal";
 
 const Security = () => {
   const { data, isLoading, error, refetch } = useApiQuery(
@@ -14,6 +15,9 @@ const Security = () => {
   const handleRefetch = useCallback(() => {
     refetch();
   }, [refetch]);
+
+  // State to control the change password modal
+  const [showChangePassword, setShowChangePassword] = useState(false);
 
   if (isLoading)
     return (
@@ -114,7 +118,13 @@ const Security = () => {
                     : "never"}
                 </p>
               </div>
-              <button className="text-sm font-medium text-indigo-600 hover:text-indigo-500 transition">
+              {/* <button className="text-sm font-medium text-indigo-600 hover:text-indigo-500 transition">
+                Change Password
+              </button> */}
+              <button
+                className="text-sm font-medium text-indigo-600 hover:text-indigo-500 transition"
+                onClick={() => setShowChangePassword(true)}
+              >
                 Change Password
               </button>
             </div>
@@ -219,6 +229,17 @@ const Security = () => {
           )}
         </div>
       </div>
+      {/* Change Password Modal */}
+      {showChangePassword && (
+        <ChangePasswordModal
+          open={showChangePassword}
+          onClose={() => setShowChangePassword(false)}
+          onSuccess={() => {
+            setShowChangePassword(false);
+            handleRefetch();
+          }}
+        />
+      )}
     </>
   );
 

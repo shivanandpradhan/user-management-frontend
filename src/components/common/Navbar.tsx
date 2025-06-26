@@ -2,7 +2,7 @@ import { Link } from "react-router-dom";
 import { useAuth } from "../../hooks/useAuth";
 
 const Navbar = () => {
-  const { user, logout } = useAuth();
+  const { isAuthenticated, user, logout } = useAuth();
 
   return (
     <header className="sticky top-0 z-50 bg-white/90 backdrop-blur-md border-b border-gray-100 shadow-sm">
@@ -21,7 +21,7 @@ const Navbar = () => {
           </div>
 
           {/* Navigation Links */}
-          {user && (
+          {isAuthenticated && user && (
             <nav className="hidden md:flex space-x-1">
               <Link
                 to="/dashboard"
@@ -48,7 +48,7 @@ const Navbar = () => {
 
           {/* User Controls */}
           <div className="flex items-center space-x-3">
-            {user ? (
+            {isAuthenticated && user ? (
               <>
                 <div className="hidden sm:flex items-center space-x-2 px-3 py-1.5 rounded-full bg-gray-50 border border-gray-100">
                   <div className="w-7 h-7 rounded-full bg-gradient-to-br from-indigo-100 to-indigo-200 flex items-center justify-center text-xs font-bold text-indigo-700">

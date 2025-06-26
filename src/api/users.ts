@@ -27,13 +27,6 @@ export const updateProfile = (
   });
 };
 
-export const changePassword = (data: {
-  currentPassword: string;
-  newPassword: string;
-}): Promise<ApiResponse<void>> => {
-  return axiosInstance.post("/auth/change-password", data);
-};
-
 export const deleteAccount = (): Promise<ApiResponse<void>> => {
   return axiosInstance.delete("/users/me");
 };
@@ -46,4 +39,28 @@ export const revokeSession = (
   sessionId: string
 ): Promise<ApiResponse<void>> => {
   return axiosInstance.delete(`/users/me/sessions/${sessionId}`);
+};
+
+export const changePassword = async ({
+  userId,
+  currentPassword,
+  newPassword,
+}: {
+  userId: string;
+  currentPassword: string;
+  newPassword: string;
+}) => {
+  const response = await axiosInstance.post(
+    "/auth/change-password",
+    {
+      currentPassword,
+      newPassword,
+    },
+    {
+      headers: {
+        "x-user-id": userId,
+      },
+    }
+  );
+  return response.data;
 };

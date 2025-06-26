@@ -9,29 +9,65 @@ const LoginForm = () => {
     handleSubmit,
     formState: { errors },
   } = useForm<LoginRequest>();
-  const { login, isLoading, error } = useAuth();
+
+  const { login, isLoading, error, verifyMfa, verifyOtp } = useAuth();
+
   const [showMfa, setShowMfa] = useState(false);
+  const [showOtp, setShowOtp] = useState(false);
   const [mfaCode, setMfaCode] = useState("");
+  const [otpCode, setOtpCode] = useState("");
+  const [userIdForMfa, setUserIdForMfa] = useState<string | null>(null);
+  const [userIdForOtp, setUserIdForOtp] = useState<string | null>(null);
+  const [mfaError, setMfaError] = useState<string | null>(null);
+  const [otpError, setOtpError] = useState<string | null>(null);
 
   const onSubmit = async (data: LoginRequest) => {
-    if (showMfa) {
-      await login({ ...data, mfaCode });
+    setMfaError(null);
+    setOtpError(null);
+
+    if (showMfa && userIdForMfa) {
+      // Verify MFA
+      try {
+        await verifyMfa({ code: mfaCode, userId: userIdForMfa });
+        // On success, user is logged in (handled in useAuth)
+      } catch (err: any) {
+        setMfaError(err.toString());
+      }
+    } else if (showOtp && userIdForOtp) {
+      // Verify OTP
+      try {
+        await verifyOtp({ otp: otpCode, userId: userIdForOtp });
+        // On success, user is logged in (handled in useAuth)
+      } catch (err: any) {
+        setOtpError(err.toString());
+      }
     } else {
-      await login(data);
+      // Initial login
+      try {
+        const response = await login(data);
+        if (response?.mfaEnabled) {
+          setUserIdForMfa(response.userId);
+          setShowMfa(true);
+        } else if (response?.otpLoginEnabled) {
+          setUserIdForOtp(response.userId);
+          setShowOtp(true);
+        }
+        // else: user is logged in directly
+      } catch (err: any) {
+        // error handled by redux
+      }
     }
   };
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-indigo-50 to-white p-4">
       <div className="w-full max-w-md bg-white rounded-2xl shadow-xl overflow-hidden">
-        {/* Decorative header */}
         <div className="bg-gradient-to-r from-indigo-500 to-indigo-600 p-6 text-center">
           <h2 className="text-3xl font-bold text-white">Welcome Back</h2>
           <p className="text-indigo-100 mt-2">Sign in to your account</p>
         </div>
-
         <div className="p-8">
-          {error && (
+          {error && !showMfa && (
             <div className="mb-6 p-4 bg-red-50 rounded-lg border border-red-100 flex items-start">
               <div className="flex-shrink-0">
                 <svg
@@ -51,97 +87,129 @@ const LoginForm = () => {
               </div>
             </div>
           )}
+          {mfaError && (
+            <div className="mb-6 p-4 bg-red-50 rounded-lg border border-red-100 text-red-800 text-sm">
+              {mfaError}
+            </div>
+          )}
 
           <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
-            <div>
-              <label
-                htmlFor="usernameOrEmail"
-                className="block text-sm font-medium text-gray-700 mb-1"
-              >
-                Email or Username
-              </label>
-              <div className="relative">
-                <input
-                  id="usernameOrEmail"
-                  type="text"
-                  {...register("usernameOrEmail", {
-                    required: "Username or email is required",
-                  })}
-                  className={`block w-full px-4 py-3 rounded-lg border ${
-                    errors.usernameOrEmail
-                      ? "border-red-300 focus:ring-red-500 focus:border-red-500"
-                      : "border-gray-300 focus:ring-indigo-500 focus:border-indigo-500"
-                  } shadow-sm placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-opacity-50 transition-all`}
-                  placeholder="you@example.com"
-                />
-                {errors.usernameOrEmail && (
-                  <div className="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none">
-                    <svg
-                      className="h-5 w-5 text-red-500"
-                      fill="currentColor"
-                      viewBox="0 0 20 20"
-                    >
-                      <path
-                        fillRule="evenodd"
-                        d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z"
-                        clipRule="evenodd"
-                      />
-                    </svg>
+            {!showMfa && !showOtp ? (
+              <>
+                <div>
+                  <label
+                    htmlFor="usernameOrEmail"
+                    className="block text-sm font-medium text-gray-700 mb-1"
+                  >
+                    Email or Username
+                  </label>
+                  <div className="relative">
+                    <input
+                      id="usernameOrEmail"
+                      type="text"
+                      {...register("usernameOrEmail", {
+                        required: "Username or email is required",
+                      })}
+                      className={`block w-full px-4 py-3 rounded-lg border ${
+                        errors.usernameOrEmail
+                          ? "border-red-300 focus:ring-red-500 focus:border-red-500"
+                          : "border-gray-300 focus:ring-indigo-500 focus:border-indigo-500"
+                      } shadow-sm placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-opacity-50 transition-all`}
+                      placeholder="you@example.com"
+                    />
+                    {errors.usernameOrEmail && (
+                      <div className="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none">
+                        <svg
+                          className="h-5 w-5 text-red-500"
+                          fill="currentColor"
+                          viewBox="0 0 20 20"
+                        >
+                          <path
+                            fillRule="evenodd"
+                            d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z"
+                            clipRule="evenodd"
+                          />
+                        </svg>
+                      </div>
+                    )}
                   </div>
-                )}
-              </div>
-              {errors.usernameOrEmail && (
-                <p className="mt-1 text-sm text-red-600">
-                  {errors.usernameOrEmail.message}
-                </p>
-              )}
-            </div>
+                  {errors.usernameOrEmail && (
+                    <p className="mt-1 text-sm text-red-600">
+                      {errors.usernameOrEmail.message}
+                    </p>
+                  )}
+                </div>
 
-            <div>
-              <label
-                htmlFor="password"
-                className="block text-sm font-medium text-gray-700 mb-1"
-              >
-                Password
-              </label>
-              <div className="relative">
-                <input
-                  id="password"
-                  type="password"
-                  {...register("password", {
-                    required: "Password is required",
-                  })}
-                  className={`block w-full px-4 py-3 rounded-lg border ${
-                    errors.password
-                      ? "border-red-300 focus:ring-red-500 focus:border-red-500"
-                      : "border-gray-300 focus:ring-indigo-500 focus:border-indigo-500"
-                  } shadow-sm placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-opacity-50 transition-all`}
-                  placeholder="••••••••"
-                />
-                {errors.password && (
-                  <div className="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none">
-                    <svg
-                      className="h-5 w-5 text-red-500"
-                      fill="currentColor"
-                      viewBox="0 0 20 20"
-                    >
-                      <path
-                        fillRule="evenodd"
-                        d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z"
-                        clipRule="evenodd"
-                      />
-                    </svg>
+                <div>
+                  <label
+                    htmlFor="password"
+                    className="block text-sm font-medium text-gray-700 mb-1"
+                  >
+                    Password
+                  </label>
+                  <div className="relative">
+                    <input
+                      id="password"
+                      type="password"
+                      {...register("password", {
+                        required: "Password is required",
+                      })}
+                      className={`block w-full px-4 py-3 rounded-lg border ${
+                        errors.password
+                          ? "border-red-300 focus:ring-red-500 focus:border-red-500"
+                          : "border-gray-300 focus:ring-indigo-500 focus:border-indigo-500"
+                      } shadow-sm placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-opacity-50 transition-all`}
+                      placeholder="••••••••"
+                    />
+                    {errors.password && (
+                      <div className="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none">
+                        <svg
+                          className="h-5 w-5 text-red-500"
+                          fill="currentColor"
+                          viewBox="0 0 20 20"
+                        >
+                          <path
+                            fillRule="evenodd"
+                            d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z"
+                            clipRule="evenodd"
+                          />
+                        </svg>
+                      </div>
+                    )}
                   </div>
-                )}
-              </div>
-              {errors.password && (
-                <p className="mt-1 text-sm text-red-600">
-                  {errors.password.message}
-                </p>
-              )}
-            </div>
+                  {errors.password && (
+                    <p className="mt-1 text-sm text-red-600">
+                      {errors.password.message}
+                    </p>
+                  )}
+                </div>
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center">
+                    <input
+                      id="remember-me"
+                      name="remember-me"
+                      type="checkbox"
+                      className="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300 rounded"
+                    />
+                    <label
+                      htmlFor="remember-me"
+                      className="ml-2 block text-sm text-gray-700"
+                    >
+                      Remember me
+                    </label>
+                  </div>
 
-            {showMfa && (
+                  <div className="text-sm">
+                    <a
+                      href="/forgot-password"
+                      className="font-medium text-indigo-600 hover:text-indigo-500"
+                    >
+                      Forgot password?
+                    </a>
+                  </div>
+                </div>
+              </>
+            ) : showMfa ? (
               <div>
                 <label
                   htmlFor="mfaCode"
@@ -161,33 +229,30 @@ const LoginForm = () => {
                   Check your authenticator app for the code
                 </p>
               </div>
-            )}
-
-            <div className="flex items-center justify-between">
-              <div className="flex items-center">
-                <input
-                  id="remember-me"
-                  name="remember-me"
-                  type="checkbox"
-                  className="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300 rounded"
-                />
+            ) : (
+              <div>
                 <label
-                  htmlFor="remember-me"
-                  className="ml-2 block text-sm text-gray-700"
+                  htmlFor="otpCode"
+                  className="block text-sm font-medium text-gray-700 mb-1"
                 >
-                  Remember me
+                  OTP Code
                 </label>
+                <input
+                  id="otpCode"
+                  type="text"
+                  value={otpCode}
+                  onChange={(e) => setOtpCode(e.target.value)}
+                  className="block w-full px-4 py-3 rounded-lg border border-gray-300 shadow-sm placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 focus:ring-opacity-50 transition-all"
+                  placeholder="Enter the OTP sent to your email"
+                />
+                <p className="mt-1 text-xs text-gray-500">
+                  Check your email for the OTP code
+                </p>
+                {otpError && (
+                  <p className="mt-1 text-xs text-red-600">{otpError}</p>
+                )}
               </div>
-
-              <div className="text-sm">
-                <a
-                  href="/forgot-password"
-                  className="font-medium text-indigo-600 hover:text-indigo-500"
-                >
-                  Forgot password?
-                </a>
-              </div>
-            </div>
+            )}
 
             <div>
               <button
@@ -223,6 +288,8 @@ const LoginForm = () => {
                     </svg>
                     Signing in...
                   </>
+                ) : showMfa ? (
+                  "Verify Code"
                 ) : (
                   "Sign in"
                 )}

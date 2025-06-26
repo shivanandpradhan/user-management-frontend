@@ -90,7 +90,7 @@ const authSlice = createSlice({
         roles: action.payload.roles || [],
         mfaEnabled: action.payload.mfaEnabled,
       };
-      state.isAuthenticated = true;
+      state.isAuthenticated = action.payload.accessToken ? true : false;
       state.loading = false;
 
       localStorage.setItem("token", action.payload.accessToken);
