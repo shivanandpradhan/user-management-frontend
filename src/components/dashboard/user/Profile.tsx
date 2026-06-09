@@ -37,8 +37,7 @@ const Profile = () => {
     register,
     handleSubmit,
     reset,
-    formState: { errors, isDirty },
-    watch,
+    formState: { isDirty }
   } = useForm<UserProfileDto>();
 
   useEffect(() => {
