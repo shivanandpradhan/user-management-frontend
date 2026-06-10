@@ -38,29 +38,29 @@ function App() {
   return (
     <Provider store={store}>
       <QueryClientProvider client={queryClient}>
-        <BrowserRouter>
+        <BrowserRouter basename="/user-management-frontend">
           <Layout>
             <Routes>
               <Route path="/" element={<Home />} />
-              <Route path="/login" element={<Login />} />
-              <Route path="/signup" element={<SignupPage />} />
-              <Route path="/forgot-password" element={<ForgotPasswordPage />} />
+              <Route path="login" element={<Login />} />
+              <Route path="signup" element={<SignupPage />} />
+              <Route path="forgot-password" element={<ForgotPasswordPage />} />
               <Route
-                path="/reset-password/:token"
+                path="reset-password/:token"
                 element={<ResetPasswordPage />}
               />
 
-              <Route path="/dashboard" element={<Dashboard />}>
+              <Route path="dashboard" element={<Dashboard />}>
                 <Route path="profile" element={<Profile />} />
                 <Route path="security" element={<Security />} />
               </Route>
 
-              <Route path="/admin" element={<AdminDashboard />}>
+              <Route path="admin" element={<AdminDashboard />}>
                 <Route path="users" element={<UsersList />} />
                 <Route path="users/:userId" element={<UserDetails />} />
               </Route>
 
-              <Route path="/super-admin" element={<SuperAdminDashboard />}>
+              <Route path="super-admin" element={<SuperAdminDashboard />}>
                 <Route path="admins" element={<AdminsList />} />
                 <Route path="settings" element={<SystemMetrics />} />
               </Route>
