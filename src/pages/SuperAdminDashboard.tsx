@@ -1,25 +1,8 @@
-// import { Outlet } from "react-router-dom";
-// import ProtectedRoute from "../components/common/ProtectedRoute";
-
-// const SuperAdminDashboard = () => {
-//   return (
-//     <ProtectedRoute roles={["ROLE_SUPER_ADMIN"]}>
-//       <div className="p-4">
-//         <h1 className="text-2xl font-bold mb-6">Super Admin Dashboard</h1>
-//         <Outlet />
-//       </div>
-//     </ProtectedRoute>
-//   );
-// };
-
-// export default SuperAdminDashboard;
-
 import { Outlet } from "react-router-dom";
-import ProtectedRoute from "../components/common/ProtectedRoute";
 
 const SuperAdminDashboard = () => {
   return (
-    <ProtectedRoute roles={["ROLE_SUPER_ADMIN"]}>
+    <>
       <div className="min-h-screen bg-gradient-to-br from-indigo-50 via-white to-indigo-200 flex flex-col items-center py-12 px-4 relative overflow-hidden">
         {/* Decorative background circle */}
         <div className="absolute -top-16 -right-16 w-64 h-64 bg-indigo-200 rounded-full opacity-20 blur-2xl pointer-events-none -z-10"></div>
@@ -60,7 +43,7 @@ const SuperAdminDashboard = () => {
           </div>
         </div>
       </div>
-    </ProtectedRoute>
+    </>
   );
 };
 

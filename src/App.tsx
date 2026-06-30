@@ -4,6 +4,8 @@ import { Provider } from "react-redux";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import store from "./store/store";
 import Layout from "./components/common/Layout";
+import ProtectedRoute from "./components/common/ProtectedRoute";
+import AuthGuard from "./components/common/AuthGuard";
 import Login from "./pages/Login";
 import Dashboard from "./pages/Dashboard";
 import AdminDashboard from "./pages/AdminDashboard";
@@ -22,18 +24,6 @@ import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
 
-// todo - disabling retry mechanism for development purpose. will remove later.
-// const queryClient = new QueryClient({
-//   defaultOptions: {
-//     queries: {
-//       retry: false, // Disable retry globally
-//     },
-//     mutations: {
-//       retry: false, // (Optional) Disable retry for mutations as well
-//     },
-//   },
-// });
-
 function App() {
   return (
     <Provider store={store}>
@@ -41,30 +31,79 @@ function App() {
         <BrowserRouter basename="/user-management-frontend">
           <Layout>
             <Routes>
+              {/* Public Routes - Accessible to everyone */}
               <Route path="/" element={<Home />} />
-              <Route path="login" element={<Login />} />
-              <Route path="signup" element={<SignupPage />} />
-              <Route path="forgot-password" element={<ForgotPasswordPage />} />
-              <Route
-                path="reset-password/:token"
-                element={<ResetPasswordPage />}
+              
+              {/* Auth Routes - Redirect to dashboard if already logged in */}
+              <Route 
+                path="login" 
+                element={
+                  <AuthGuard redirectTo="/dashboard">
+                    <Login />
+                  </AuthGuard>
+                } 
+              />
+              <Route 
+                path="signup" 
+                element={
+                  <AuthGuard redirectTo="/dashboard">
+                    <SignupPage />
+                  </AuthGuard>
+                } 
+              />
+              <Route 
+                path="forgot-password" 
+                element={
+                  <AuthGuard redirectTo="/dashboard">
+                    <ForgotPasswordPage />
+                  </AuthGuard>
+                } 
+              />
+              <Route 
+                path="reset-password/:token" 
+                element={<ResetPasswordPage />} 
               />
 
-              <Route path="dashboard" element={<Dashboard />}>
+              {/* Protected Routes - Require authentication */}
+              <Route 
+                path="dashboard" 
+                element={
+                  <ProtectedRoute>
+                    <Dashboard />
+                  </ProtectedRoute>
+                }
+              >
                 <Route path="profile" element={<Profile />} />
                 <Route path="security" element={<Security />} />
               </Route>
 
-              <Route path="admin" element={<AdminDashboard />}>
+              {/* Admin Routes - Require ROLE_ADMIN */}
+              <Route 
+                path="admin" 
+                element={
+                  <ProtectedRoute requiredRoles={["ROLE_ADMIN"]}>
+                    <AdminDashboard />
+                  </ProtectedRoute>
+                }
+              >
                 <Route path="users" element={<UsersList />} />
                 <Route path="users/:userId" element={<UserDetails />} />
               </Route>
 
-              <Route path="super-admin" element={<SuperAdminDashboard />}>
+              {/* Super Admin Routes - Require ROLE_SUPER_ADMIN */}
+              <Route 
+                path="super-admin" 
+                element={
+                  <ProtectedRoute requiredRoles={["ROLE_SUPER_ADMIN"]}>
+                    <SuperAdminDashboard />
+                  </ProtectedRoute>
+                }
+              >
                 <Route path="admins" element={<AdminsList />} />
                 <Route path="settings" element={<SystemMetrics />} />
               </Route>
 
+              {/* 404 Page */}
               <Route path="*" element={<NotFound />} />
             </Routes>
           </Layout>
