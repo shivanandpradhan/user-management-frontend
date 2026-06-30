@@ -69,7 +69,7 @@ const SignupForm = () => {
               id="username"
               label="Username"
               type="text"
-              placeholder="john_doe"
+              placeholder="user_name"
               register={register}
               name="username"
               validation={validation.username}
